@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    app: {{ .Release.Name }}
+    tier: frontend
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+      tier: frontend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+        tier: frontend
+    spec:
+      initContainers:
+        - name: init-sites-volume
+          image: {{ .Values.drupal.image }}
+          command: ['/bin/bash', '-c']
+          args: ['cp -r /var/www/html/sites /data; chown www-data:www-data /data/ -R']
+          volumeMounts:
+            - mountPath: /data
+              name: {{ .Release.Name }}
+      containers:
+        - image: {{ .Values.drupal.image }}
+          name: {{ .Release.Name }}
+          env:
+            - name: DRUPAL_DATABASE_HOST
+              value: drupal-mysql
+            - name: DRUPAL_DATABASE_PASSWORD
+              value: root_password
+
+          ports:
+            - containerPort: 8081
+              name: drupal
+          volumeMounts:
+            - name: drupal
+              mountPath: /var/www/html/modules
+              subPath: modules
+            - name: drupal
+              mountPath: /var/www/html/profiles
+              subPath: profiles
+            - name: drupal
+              mountPath: /var/www/html/sites
+              subPath: sites
+            - name: drupal
+              mountPath: /var/www/html/themes
+              subPath: themes
+      volumes:
+        - name: drupal
+          persistentVolumeClaim:
+            claimName: drupal-claim

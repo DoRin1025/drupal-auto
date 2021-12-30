@@ -1,0 +1,5 @@
+drupal:
+   image: drupal:latest
+
+mysql:
+   image: mysql:latest
