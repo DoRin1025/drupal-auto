@@ -26,6 +26,7 @@ spec:
           volumeMounts:
             - mountPath: /data
               name: {{ .Release.Name }}
+              
       containers:
         - image: {{ .Values.drupal.image }}
           name: {{ .Release.Name }}
